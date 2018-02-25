@@ -1,30 +1,167 @@
 ---
 title: "EDA_USING_R_LOAN_DATA"
 author: "Deepak Singh"
-date: "February 25, 2018"
+date: "February 22, 2018"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE)
 ```
 
-## R Markdown
+## Reading the dataset and producing summary of Loan amount
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+We will start with reading the loan proser data into the variable and produce summaries of some variables. Below is the summary of The origination amount of the loan.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r Loan Prosper Data, echo=FALSE}
+lp<-read.csv("C:/Users/singhd5/Documents/Self docs/Udacity/udacity-git-course/EDA-USING-R/EXPLORE_AND_SUMMARIZE_DATA_WITH_R/prosperLoanData.csv",sep = ",")
+attach(lp)
+summary(LoanOriginalAmount)
 ```
 
-## Including Plots
+## Producing histogram of Loan amount
 
-You can also embed plots, for example:
+The histogram of the loan amount reveals that there are few ouliers i the dataset. Also, the distribution of LoanOriginalAmount seems to skewed with few spikes.
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r histogram plot loan amount, echo=FALSE}
+library(ggplot2)
+library(gridExtra)
+ggplot(aes(LoanOriginalAmount), data = lp)+
+  geom_histogram(binwidth = 1000)
+  #xlim(0,quantile(LoanOriginalAmount,0.99))
+  
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r transformed histogram plot, echo=FALSE}
+ggplot(aes(LoanOriginalAmount), data = lp)+
+  geom_histogram(bins = 50)+
+    scale_x_log10()
+
+```
+
+Transformed the skewed distributed data for loan amount to better understand the the distribution of loan amount. The transformed distribution looks more like normaly distributed. Lets see if the employment status has an effect on the loan amount.
+
+```{r histogram with employment status, echo=FALSE}
+ggplot(aes(y = LoanOriginalAmount, x = EmploymentStatus), data = lp)+
+  geom_boxplot()
+    
+
+by(LoanOriginalAmount,EmploymentStatus,summary)
+table(EmploymentStatus)
+```
+
+We can see from above that mean of loan amount is highest from the Employed followed by full-time then self-employed. Same is true for the number of loans issued for the respective employmentstatus
+
+## Analysing the bad loans
+
+In this ananlysis we are going to see if there is any relationship of bad loans(loan status of chargedoff, defaulted) with credit score
+
+```{r Analysing the bad loans, echo=FALSE}
+lp$LoanOriginationDate <- as.Date(lp$LoanOriginationDate)
+lp.badloans <- subset(lp, (LoanStatus == 'Defaulted' | LoanStatus == 'Chargedoff') & LoanOriginationDate > ("2009-07-31"))
+
+by(lp.badloans$ProsperScore,lp.badloans$LoanStatus,summary)
+
+ggplot(aes(y = lp.badloans$LoanOriginalAmount, x = lp.badloans$LoanStatus), data = lp.badloans)+
+  geom_boxplot()
+
+```
+
+There are 6348 bad loans in the dataset after July 2009 and out of those the mean ProsperScore  were 5.39 and 5.62 for both ChargedOff or Defaulted Loan status respectively
+
+## Analysis of Income ranges
+
+```{r}
+lp$IncomeRange <- factor(lp$IncomeRange,levels = c("Not employed", "$0", "Not displayed",
+                "$1-24,999", "$25,000-49,999", "$50,000-74,999",
+                "$75,000-99,999", "$100,000+"))
+#print(levels(IncomeRange))
+
+ggplot(aes(IncomeRange), data = lp)+
+  geom_bar(stat = 'count')
+
+```
+
+
+Income ranges are not normally distributed with peak for income ranging 25,000-49,999.
+
+## Analysis of Loans by state
+
+```{r}
+lp$BadLoan <- ifelse(LoanStatus == "Defaulted" | LoanStatus == "Chargedoff"| LoanStatus == "Past Due (61-90 days)" |LoanStatus == "Past Due (91-120 days)" |LoanStatus == "Past Due (>120 days)" ,"Yes","No")
+ggplot(aes(BorrowerState, fill = lp$BadLoan), data = lp)+
+  geom_histogram(stat = 'count')
+
+```
+Largest number of borrowers are from California.
+
+## Analysis of Loans by Listing Category
+
+```{r}
+
+ggplot(aes(ListingCategory..numeric., fill = lp$BadLoan), data = lp)+
+  geom_histogram(stat = 'count')
+
+```
+
+## Analysis of StatedMonthlyIncome
+
+```{r}
+ggplot(aes(lp$StatedMonthlyIncome), data = lp)+
+  geom_histogram(bins = 500)+
+  xlim(0,20000)
+```
+
+The distribution appears to be skewed
+
+
+## Analysis of MonthlyLoanPayment
+
+```{r}
+ggplot(aes(lp$MonthlyLoanPayment), data = lp)+
+  geom_histogram(bins = 50)
+
+```
+
+Monthly Loan payment appears to be positively skewed
+
+## Analysis of Loan term on loans
+
+```{r}
+
+
+ggplot(aes(lp$LoanOriginalAmount, fill = as.factor(lp$Term)), data = lp)+
+  geom_histogram(bins = 50)
+
+```
+Most of the loan amount are termed at 36 months.
+
+
+# Univariate Analysis
+##What is the structure of your dataset?
+
+There are 113,937 observations in the dataset with 81 variables. 
+
+Some of the Continuous Variables are:
+
+EmploymentStatusDuration CreditScoreRangeLower CreditScoreRangeUpper CurrentCreditLines DebtToIncomeRatio StatedMonthlyIncome BorrowerAPR BorrowerRate LoanOriginalAmount MonthlyLoanPayment
+
+Some of the Discrete Variables are:
+
+BorrowerState Occupation EmploymentStatus IsBorrowerHomeowner IncomeRange IncomeVerifiable Term ListingCategory LoanStatus LoanOriginationDate
+
+
+##What is/are the main feature(s) of interest in your dataset?
+
+There are a number of features that will give insights to the profile of the loan and borrower. I think the main ones for borrowers are credit score, income and the ones for the loans are loan amount, interest rate, and term.
+
+##What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+
+Loan category and status can help determine how the loans are being used and what loans are current, defaulted, delinquent etc (Bad Loans). Also, we can leverage Employment status and explore the impact on Loan.
+
+##Did you create any new variables from existing variables in the dataset?
+
+I created a new categorical variables that determines a loan is a Bad Loan or not. I grouped the loans with status of
+ "Defaulted" , "Chargedoff", "Past Due (61-90 days)" , "Past Due (91-120 days)" and "Past Due (>120 days)" as Bad loans
+
+
