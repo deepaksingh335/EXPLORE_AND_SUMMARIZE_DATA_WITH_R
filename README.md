@@ -8,6 +8,7 @@ EDA can lead to insights, which may uncover to other questions, and eventually p
 Below are some of the learning outcomes of the project:
 
   1)Understand the distribution of a variable and to check for anomalies and outliers
+  
   2)Learn how to quantify and visualize individual variables within a data set by using appropriate plots such as scatter plots,                histograms, bar charts, and box plots
   
   3)Explore variables to identify the most important variables and relationships within a data set before building predictive models; calculate correlations, and investigate conditional means
