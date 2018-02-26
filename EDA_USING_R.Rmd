@@ -164,4 +164,24 @@ Loan category and status can help determine how the loans are being used and wha
 I created a new categorical variables that determines a loan is a Bad Loan or not. I grouped the loans with status of
  "Defaulted" , "Chargedoff", "Past Due (61-90 days)" , "Past Due (91-120 days)" and "Past Due (>120 days)" as Bad loans
 
+##Analysis of Loan Amount with Listing Category
+
+```{r}
+str(ListingCategory..numeric.)
+
+ggplot(aes(x = as.factor(ListingCategory..numeric.), y = LoanOriginalAmount), data = lp)+
+  geom_boxplot()
+   
+```
+From the above plot we can see that Debt consolidation(1) as expected has the highest loan amounts across categories; however, unexpectedly "Baby and Adoption" (8) category is also the highest (tied) loan amount across categories
+
+##Analysis of Borrower rate with Credit score 
+
+```{r}
+ggplot(aes(x = CreditScoreRangeLower , y = BorrowerRate), data = lp)+
+  geom_point(alpha = 1/50, position = 'jitter')
+```
+The above plot seems to have positive correlation and it follows the general understanding of - interest rate is lower for more creditworthy borrowers
+
+## Analysis of Debt-to-Income ratio with Monthly Income
 
