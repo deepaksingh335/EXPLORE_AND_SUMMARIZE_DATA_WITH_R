@@ -173,6 +173,8 @@ ggplot(aes(x = as.factor(ListingCategory..numeric.), y = LoanOriginalAmount), da
   geom_boxplot()
    
 ```
+
+
 From the above plot we can see that Debt consolidation(1) as expected has the highest loan amounts across categories; however, unexpectedly "Baby and Adoption" (8) category is also the highest (tied) loan amount across categories
 
 ##Analysis of Borrower rate with Credit score 
@@ -180,8 +182,99 @@ From the above plot we can see that Debt consolidation(1) as expected has the hi
 ```{r}
 ggplot(aes(x = CreditScoreRangeLower , y = BorrowerRate), data = lp)+
   geom_point(alpha = 1/50, position = 'jitter')
+
+cor.test(CreditScoreRangeLower, BorrowerRate)
 ```
-The above plot seems to have positive correlation and it follows the general understanding of - interest rate is lower for more creditworthy borrowers
+
+
+The above plot seems to have negative correlation and it follows the general understanding of - interest rate is lower for more creditworthy borrowers
 
 ## Analysis of Debt-to-Income ratio with Monthly Income
+
+```{r}
+ggplot(aes(x = StatedMonthlyIncome , y = DebtToIncomeRatio, color = BadLoan), data = lp)+
+  geom_point( alpha = 1/5 , position = 'jitter')+
+  xlim(0,20000)+
+  ylim(0,2)
+
+```
+
+
+In comparing debt-to-income ratio with a borrower's stated monthly income I was expecting to see a trend that delinquent borrowers would have a lower monthly income and a higher debt-to-income ratio.
+
+## Analysis of Borrower rate with Loan amount
+
+```{r}
+ggplot(aes(x = LoanOriginalAmount , y = BorrowerRate), data = lp)+
+  geom_point( alpha = 1/10,position = 'jitter')
+
+```
+
+
+There appears to be a negative correlation. There are some large loan amounts with low Borrower rate.
+
+## Analysis of Loan term with Borrower rate
+
+```{r}
+ggplot(aes(x = as.factor(Term) , y = BorrowerRate), data = lp)+
+  geom_boxplot()
+```
+
+I was expecting to see low rate as the term increases but as shown from the above plot small terms have the lowest mean borrower rate. There are other factors in addition to the loan term affecting the borrower rate.
+
+
+
+#Bivariate Analysis
+##Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+There's a negative relationship between interest rates and loan amount, the larger the loan, the lower the rate on average. That was mostly due to them having higher credit scores.
+
+Delinquent borrowers would have a lower monthly income and a higher debt-to-income ratio
+
+There is a negative correlation between Credit score and Borrower rate - interest rate is lower for more creditworthy borrowers
+
+##Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+Debt consolidation as expected has the highest loan amounts across categories; however, unexpectedly "Baby and Adoption" category is also the highest (tied) loan amount across categories.
+
+##What was the strongest relationship you found?
+
+The strongest relationship I found was between credit score and interest rate, with -0.46. This makes sense since credit score is a rating of the credit-worthiness of the borrower and that should be related to the cost of borrowing (interest rate).
+
+
+##Correlation Matrix
+
+```{r}
+library("GGally")
+lp.subset <- lp [,c("BadLoan","StatedMonthlyIncome","DebtToIncomeRatio","BorrowerRate","LoanStatus","LoanOriginalAmount","CreditScoreRangeLower","ListingCategory..numeric.","EmploymentStatus","MonthlyLoanPayment", "BorrowerAPR", "CreditScoreRangeUpper")]
+ggcorr(lp.subset, label = TRUE, label_size = 3, color = "black", layout.exp = 2)
+
+```
+
+The correlation matrix revealed a few surprising things - I thought there would be a much stronger relationship between interest rate (BorrowerRate) and the credit score (CreditScoreRangeUpper/Lower). At a score of -0.5 it's the strongest correlation out of the selected variables.
+
+## Analysis of credit score with loan amount and BadLoans
+
+```{r}
+ggplot(aes(x = CreditScoreRangeUpper, y = LoanOriginalAmount), data = lp)+
+  geom_point(alpha = 1/50, position = 'jitter')+
+  facet_wrap(~BadLoan)
+```
+
+
+In the above comparisons, both scatterplots show a borrower's credit score against their loan amounts.The higher concentration of Bad Loans have lower credit scores, and they also tend to borrow less money, under $10,000.
+Also, we can see that lower loan amount for borrowers with much higher credit scores. Based on previous analysis, higher scores provide lower rates, which would tend to allow the borrower to gain access to a higher loan amount. And although the average loan amount for loans in good standing are higher, there is still a high concentration of loans under $20,000 and with credit scores over 700.
+
+##Analysis of Loan Amount with Borrower rate and Credit score
+
+```{r}
+
+ggplot(aes(x = LoanOriginalAmount , y = BorrowerRate , color = CreditScoreRangeLower), data = subset(lp,lp$CreditScoreRangeLower > 650))+
+  geom_point(position = 'jitter')
+
+```
+
+The borrowers with high credit scores have lower interest rates and larger loan amounts. I subsetted only credit scores from 660 (1st quartile) and above for better visual presentation.
+
+
 
