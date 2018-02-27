@@ -16,7 +16,9 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE)
 We will start with reading the loan proser data into the variable and produce summaries of some variables. Below is the summary of The origination amount of the loan.
 
 ```{r Loan Prosper Data, echo=FALSE}
-lp<-read.csv("C:/Users/singhd5/Documents/Self docs/Udacity/udacity-git-course/EDA-USING-R/EXPLORE_AND_SUMMARIZE_DATA_WITH_R/prosperLoanData.csv",sep = ",")
+setwd("C:/Users/singhd5/Documents/Self docs/Udacity/udacity-git-course/EDA-USING-R/EXPLORE_AND_SUMMARIZE_DATA_WITH_R")
+
+lp<-read.csv("prosperLoanData.csv",sep = ",")
 attach(lp)
 summary(LoanOriginalAmount)
 ```
@@ -43,7 +45,7 @@ ggplot(aes(LoanOriginalAmount), data = lp)+
 
 Transformed the skewed distributed data for loan amount to better understand the the distribution of loan amount. The transformed distribution looks more like normaly distributed. Lets see if the employment status has an effect on the loan amount.
 
-```{r histogram with employment status, echo=FALSE}
+```{r fig.width = 7, echo=FALSE}
 ggplot(aes(y = LoanOriginalAmount, x = EmploymentStatus), data = lp)+
   geom_boxplot()
     
@@ -60,7 +62,9 @@ In this ananlysis we are going to see if there is any relationship of bad loans(
 
 ```{r Analysing the bad loans, echo=FALSE}
 lp$LoanOriginationDate <- as.Date(lp$LoanOriginationDate)
-lp.badloans <- subset(lp, (LoanStatus == 'Defaulted' | LoanStatus == 'Chargedoff') & LoanOriginationDate > ("2009-07-31"))
+lp.badloans <- subset(lp, 
+                      (LoanStatus == 'Defaulted' | LoanStatus == 'Chargedoff') 
+                      & LoanOriginationDate > ("2009-07-31"))
 
 by(lp.badloans$ProsperScore,lp.badloans$LoanStatus,summary)
 
@@ -73,10 +77,14 @@ There are 6348 bad loans in the dataset after July 2009 and out of those the mea
 
 ## Analysis of Income ranges
 
-```{r}
-lp$IncomeRange <- factor(lp$IncomeRange,levels = c("Not employed", "$0", "Not displayed",
-                "$1-24,999", "$25,000-49,999", "$50,000-74,999",
-                "$75,000-99,999", "$100,000+"))
+```{r fig.width=10}
+# Reordering the Income range factor levels
+
+lp$IncomeRange <- factor(lp$IncomeRange,levels = 
+                           c("Not employed", "$0", "Not displayed",
+                             "$1-24,999", "$25,000-49,999", "$50,000-74,999",
+                             "$75,000-99,999", "$100,000+"))
+
 #print(levels(IncomeRange))
 
 ggplot(aes(IncomeRange), data = lp)+
@@ -89,8 +97,15 @@ Income ranges are not normally distributed with peak for income ranging 25,000-4
 
 ## Analysis of Loans by state
 
-```{r}
-lp$BadLoan <- ifelse(LoanStatus == "Defaulted" | LoanStatus == "Chargedoff"| LoanStatus == "Past Due (61-90 days)" |LoanStatus == "Past Due (91-120 days)" |LoanStatus == "Past Due (>120 days)" ,"Yes","No")
+```{r fig.width=15}
+# Creating a new variable grouping the delinquint, defaulted and chargedoff loan status as Bad Loan
+
+lp$BadLoan <- ifelse(LoanStatus == "Defaulted" 
+                     |LoanStatus == "Chargedoff"
+                     |LoanStatus == "Past Due (61-90 days)" 
+                     |LoanStatus == "Past Due (91-120 days)" 
+                     |LoanStatus == "Past Due (>120 days)" ,"Yes","No")
+
 ggplot(aes(BorrowerState, fill = lp$BadLoan), data = lp)+
   geom_histogram(stat = 'count')
 
@@ -106,11 +121,13 @@ ggplot(aes(ListingCategory..numeric., fill = lp$BadLoan), data = lp)+
 
 ```
 
+From the above plot most of the loans seems to be in Debt Consolidation category
+
 ## Analysis of StatedMonthlyIncome
 
 ```{r}
 ggplot(aes(lp$StatedMonthlyIncome), data = lp)+
-  geom_histogram(bins = 500)+
+  geom_histogram(binwidth = 500)+
   xlim(0,20000)
 ```
 
@@ -127,16 +144,27 @@ ggplot(aes(lp$MonthlyLoanPayment), data = lp)+
 
 Monthly Loan payment appears to be positively skewed
 
-## Analysis of Loan term on loans
+## Analysis of Loan Terms
+
+```{r}
+ggplot(aes(Term), data = lp)+
+  geom_histogram(bins = 50)+
+  scale_x_continuous(breaks = seq(12,60,2))
+
+```
+
+As we can see above most number of loans are given with 36 month term.
+
+## Analysis of CreditScoreRangeUpper
 
 ```{r}
 
-
-ggplot(aes(lp$LoanOriginalAmount, fill = as.factor(lp$Term)), data = lp)+
-  geom_histogram(bins = 50)
+ggplot(aes(CreditScoreRangeUpper), data = lp)+
+  geom_histogram(bins = 40)
 
 ```
-Most of the loan amount are termed at 36 months.
+
+From the above curve we are seeing somewhat normal distribution of the credit score range upper limit. Credit Score Range lower has the similar distribution
 
 
 # Univariate Analysis
@@ -168,12 +196,53 @@ I created a new categorical variables that determines a loan is a Bad Loan or no
 
 #Bivariate plots
 
+
+##Correlation Matrix
+
+```{r fig.width= 10}
+library("GGally")
+# Subsetting data to include some numeric variables
+
+lp.subset <- lp [,c("BadLoan"
+                    ,"StatedMonthlyIncome"
+                    ,"DebtToIncomeRatio"
+                    ,"BorrowerRate"
+                    ,"LoanStatus"
+                    ,"LoanOriginalAmount"
+                    ,"CreditScoreRangeLower"
+                    ,"ListingCategory..numeric."
+                    ,"EmploymentStatus"
+                    ,"MonthlyLoanPayment"
+                    , "BorrowerAPR"
+                    , "CreditScoreRangeUpper")]
+
+ggcorr(lp.subset, label = TRUE, label_size = 3, color = "black", layout.exp = 2)
+
+```
+
+
+The correlation matrix revealed a few surprising things - I thought there would be a much stronger relationship between interest rate (BorrowerRate) and the credit score (CreditScoreRangeUpper/Lower). At a score of -0.5 it's the strongest correlation out of the selected variables.
+
+## Analysis of Loan term on loans
+
+
+```{r}
+
+ggplot(aes(lp$LoanOriginalAmount, fill = as.factor(lp$Term)), data = lp)+
+  geom_histogram(bins = 50)
+
+```
+
+
+Most of the loan amount are termed at 36 months.
+
+
 ##Analysis of Loan Amount with Listing Category
 
 ```{r}
-str(ListingCategory..numeric.)
-
-ggplot(aes(x = as.factor(ListingCategory..numeric.), y = LoanOriginalAmount), data = lp)+
+ggplot(aes(x = as.factor(ListingCategory..numeric.), 
+           y = LoanOriginalAmount),
+       data = lp)+
   geom_boxplot()
    
 ```
@@ -196,7 +265,10 @@ The above plot seems to have negative correlation and it follows the general und
 ## Analysis of Debt-to-Income ratio with Monthly Income
 
 ```{r}
-ggplot(aes(x = StatedMonthlyIncome , y = DebtToIncomeRatio, color = BadLoan), data = lp)+
+ggplot(aes(x=StatedMonthlyIncome,
+           y=DebtToIncomeRatio,
+           color=BadLoan),
+       data = lp)+
   geom_point( alpha = 1/5 , position = 'jitter')+
   xlim(0,20000)+
   ylim(0,2)
@@ -247,17 +319,6 @@ The strongest relationship I found was between credit score and interest rate, w
 
 #Multivariate Plots
 
-##Correlation Matrix
-
-```{r}
-library("GGally")
-lp.subset <- lp [,c("BadLoan","StatedMonthlyIncome","DebtToIncomeRatio","BorrowerRate","LoanStatus","LoanOriginalAmount","CreditScoreRangeLower","ListingCategory..numeric.","EmploymentStatus","MonthlyLoanPayment", "BorrowerAPR", "CreditScoreRangeUpper")]
-ggcorr(lp.subset, label = TRUE, label_size = 3, color = "black", layout.exp = 2)
-
-```
-
-The correlation matrix revealed a few surprising things - I thought there would be a much stronger relationship between interest rate (BorrowerRate) and the credit score (CreditScoreRangeUpper/Lower). At a score of -0.5 it's the strongest correlation out of the selected variables.
-
 ## Analysis of credit score with loan amount and BadLoans
 
 ```{r}
@@ -273,7 +334,11 @@ In the above comparisons, both scatterplots show a borrower's credit score again
 
 ```{r}
 
-ggplot(aes(x = LoanOriginalAmount , y = BorrowerRate , color = CreditScoreRangeLower), data = subset(lp,lp$CreditScoreRangeLower > 650))+
+
+ggplot(aes(x = LoanOriginalAmount, 
+            y = BorrowerRate,
+            color = CreditScoreRangeLower),
+        data = subset(lp,lp$CreditScoreRangeLower > 650))+
   geom_point(position = 'jitter')
 
 ```
@@ -282,7 +347,7 @@ The borrowers with high credit scores have lower interest rates and larger loan 
 
 ## Analysis of Debt to Income ratio with income range and Year
 
-```{r}
+```{r fig.width = 10}
 lp$YEAR <- substring(LoanOriginationDate,1,4)
 ggplot(aes(x = as.factor(YEAR), y = DebtToIncomeRatio), data = lp)+
   geom_boxplot()+
@@ -311,9 +376,13 @@ Based on previous analysis, higher scores provide lower rates, which would tend 
 
 ```{r}
 
-ggplot(aes(y = LoanOriginalAmount , x = BorrowerRate , color = CreditScoreRangeLower), data = subset(lp,lp$CreditScoreRangeLower > 650))+
+ggplot(aes(y = LoanOriginalAmount , 
+           x = BorrowerRate , 
+           color = CreditScoreRangeLower),
+       data = subset(lp,lp$CreditScoreRangeLower > 650))+
   geom_point(alpha = 1/20, position = 'jitter')+
   facet_wrap(~YEAR)+
+  ylab("Loan Amount ($)")+
   ggtitle("Loan Amount By Interest Rate and Credit Score")
 
 
@@ -328,11 +397,14 @@ The borrowers with high credit scores have lower interest rates and larger loan 
 
 ```{r}
 
-ggplot(aes(x = StatedMonthlyIncome , y = DebtToIncomeRatio, color = BadLoan), data = lp)+
+ggplot(aes(x = StatedMonthlyIncome , 
+           y = DebtToIncomeRatio, 
+           color = BadLoan), 
+       data = lp)+
   geom_point( alpha = 1/5 , position = 'jitter')+
   xlim(0,20000)+
   ylim(0,1)+
-  xlab("Monthly Income")+
+  xlab("Monthly Income ($)")+
   ylab("Debt-To-Income Ratio")+
   ggtitle("Monthly Income to Debt-to-Income Ration and Loan Category")
 
