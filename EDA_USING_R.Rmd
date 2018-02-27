@@ -9,6 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE)
 ```
 
+#Univariate Plots
+
 ## Reading the dataset and producing summary of Loan amount
 
 We will start with reading the loan proser data into the variable and produce summaries of some variables. Below is the summary of The origination amount of the loan.
@@ -164,6 +166,8 @@ Loan category and status can help determine how the loans are being used and wha
 I created a new categorical variables that determines a loan is a Bad Loan or not. I grouped the loans with status of
  "Defaulted" , "Chargedoff", "Past Due (61-90 days)" , "Past Due (91-120 days)" and "Past Due (>120 days)" as Bad loans
 
+#Bivariate plots
+
 ##Analysis of Loan Amount with Listing Category
 
 ```{r}
@@ -241,6 +245,7 @@ Debt consolidation as expected has the highest loan amounts across categories; h
 
 The strongest relationship I found was between credit score and interest rate, with -0.46. This makes sense since credit score is a rating of the credit-worthiness of the borrower and that should be related to the cost of borrowing (interest rate).
 
+#Multivariate Plots
 
 ##Correlation Matrix
 
@@ -263,7 +268,6 @@ ggplot(aes(x = CreditScoreRangeUpper, y = LoanOriginalAmount), data = lp)+
 
 
 In the above comparisons, both scatterplots show a borrower's credit score against their loan amounts.The higher concentration of Bad Loans have lower credit scores, and they also tend to borrow less money, under $10,000.
-Also, we can see that lower loan amount for borrowers with much higher credit scores. Based on previous analysis, higher scores provide lower rates, which would tend to allow the borrower to gain access to a higher loan amount. And although the average loan amount for loans in good standing are higher, there is still a high concentration of loans under $20,000 and with credit scores over 700.
 
 ##Analysis of Loan Amount with Borrower rate and Credit score
 
@@ -276,5 +280,92 @@ ggplot(aes(x = LoanOriginalAmount , y = BorrowerRate , color = CreditScoreRangeL
 
 The borrowers with high credit scores have lower interest rates and larger loan amounts. I subsetted only credit scores from 660 (1st quartile) and above for better visual presentation.
 
+## Analysis of Debt to Income ratio with income range and Year
 
+```{r}
+lp$YEAR <- substring(LoanOriginationDate,1,4)
+ggplot(aes(x = as.factor(YEAR), y = DebtToIncomeRatio), data = lp)+
+  geom_boxplot()+
+  ylim(0,0.5)+
+  facet_wrap(~IncomeRange)
+```
+
+
+Comparing DI ratio, most of the borrowers seem to have DI ratio close to 20-30% with a uptick in the most recent years. The $100k + income range have noticeably lower DI ratio at around 15-20%. The variance in DI ratio is reduced as incomes increase.
+
+#Multivariate Analysis
+##Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+When looking at the loan amounts vs cost (interest rate), the credit scores demarcated borrowers by credit worthiness.
+
+Investigating further, I looked at DI ratio and observed the higher the income, the lower the percentage of debt.
+
+##Were there any interesting or surprising interactions between features?
+
+The higher concentration of Bad Loans have lower credit scores, and they also tend to borrow less money, under $10,000.Also, we can see that lower loan amount for borrowers with much higher credit scores.
+Based on previous analysis, higher scores provide lower rates, which would tend to allow the borrower to gain access to a higher loan amount. And although the average loan amount for loans in good standing are higher, there is still a high concentration of loans under $20,000 and with credit scores over 700.
+
+#Final Plots
+
+## PLOT One
+
+```{r}
+
+ggplot(aes(y = LoanOriginalAmount , x = BorrowerRate , color = CreditScoreRangeLower), data = subset(lp,lp$CreditScoreRangeLower > 650))+
+  geom_point(alpha = 1/20, position = 'jitter')+
+  facet_wrap(~YEAR)+
+  ggtitle("Loan Amount By Interest Rate and Credit Score")
+
+
+```
+
+
+##Description One
+
+The borrowers with high credit scores have lower interest rates and larger loan amounts. I subsetted only credit scores from 650 (1st quartile) and above for better visual presentation. And this shows that as the lending platform matured, the overal risk exposure increased. In 2014, much more blue (credit score ~700) borrowers.
+
+##Plot two
+
+```{r}
+
+ggplot(aes(x = StatedMonthlyIncome , y = DebtToIncomeRatio, color = BadLoan), data = lp)+
+  geom_point( alpha = 1/5 , position = 'jitter')+
+  xlim(0,20000)+
+  ylim(0,1)+
+  xlab("Monthly Income")+
+  ylab("Debt-To-Income Ratio")+
+  ggtitle("Monthly Income to Debt-to-Income Ration and Loan Category")
+
+
+```
+
+
+In the above plot we examine the stated monthly incomes of borrowers and their debt-to-income ratio. This data was then visually categorized by Loan category (Good Loan or Bad Loan).
+
+High concentration of Bad Loan borrowers earn less than $2500 a month but have a relatively low debt-to-income ratio of under 0.50 (or 50%). The plot also suggests a negative correlation between monthly income and debt-to-income ratio, i.e the more a borrower makes in monthly income the lower their debt-to-income ratio; However, this does not guarantee the borrower will not go into delinquency.
+
+## Plot Three
+
+```{r}
+
+ggplot(aes(y = as.numeric(YEAR), x = BadLoan, color = BadLoan), data = lp)+
+  geom_point(alpha = 1/5, position = 'jitter')+
+  ylim(2008,2014)+
+  facet_wrap(~IncomeRange)+
+  xlab("BadLoan?")+
+  ylab("Year of Loan origination")+
+  ggtitle("Bad Loan exposure")
+
+```
+
+It appears the majority of bad loans are clustered in 2008 and 2011-2012 for the borrowers with income ranges $25k-50k and $50-75k. This leads us to beleive that recession would have impacted the Loan and would have increased delinquency.
+
+
+#Reflection
+
+The data set had nearly 114,000 loans from Nov 2005 - March 2014. Over the course of those years, Prosper has made almost $1 trillion dollars in loans ($949,894,347 to be exact). The difficulties I had with the data mainly stemmed from understanding the variables and then selecting the appropriate ones to analyze.  Another persistent issue was overplotting on scatterplots, a number of techniques were used across multiple plots. 
+
+The general analysis revealed areas of interests such as negative corelation between credit score and borrowing rate which brough up any curious questions concerning delinquent borrowers .Also, we came to know that he main loan exposures are in debt consolidation. 
+
+Additional data would also enhance this dataset. Having the borrower's age and sex would allow analysis to possibly discover trends among men and women or young and old.
 
