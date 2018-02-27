@@ -216,7 +216,12 @@ lp.subset <- lp [,c("BadLoan"
                     , "BorrowerAPR"
                     , "CreditScoreRangeUpper")]
 
-ggcorr(lp.subset, label = TRUE, label_size = 3, color = "black", layout.exp = 2)
+ggcorr(lp.subset, label = TRUE, 
+       label_size = 3,
+       hjust = 0.8,
+       size = 2.5,
+       color = "black",
+       layout.exp = 2)
 
 ```
 
