@@ -16,7 +16,6 @@ knitr::opts_chunk$set(echo = FALSE, warning = FALSE, error = FALSE)
 We will start with reading the loan proser data into the variable and produce summaries of some variables. Below is the summary of The origination amount of the loan.
 
 ```{r Loan Prosper Data, echo=FALSE}
-setwd("C:/Users/singhd5/Documents/Self docs/Udacity/udacity-git-course/EDA-USING-R/EXPLORE_AND_SUMMARIZE_DATA_WITH_R")
 
 lp<-read.csv("prosperLoanData.csv",sep = ",")
 attach(lp)
@@ -55,6 +54,44 @@ table(EmploymentStatus)
 ```
 
 We can see from above that mean of loan amount is highest from the Employed followed by full-time then self-employed. Same is true for the number of loans issued for the respective employmentstatus
+
+## Analysing the Borrower Rate
+
+```{r fig.width=9}
+library(gridExtra)
+p1 <- ggplot(aes(BorrowerRate), data = lp)+
+  geom_histogram(bins = 30)
+
+p2 <- ggplot(aes(1,BorrowerRate), data = lp)+
+  geom_boxplot()
+
+grid.arrange(p1,p2, nrow =1 )
+
+```
+
+Interest rate are normally distributed mean/med = .19 However, there is a spike around .31. Also, the boxplot indicates that there are some outliers
+
+## Analysing the Employment Status
+
+```{r fig.width=9}
+
+ggplot(aes(EmploymentStatus), data = lp)+
+  geom_bar(statu = 'count')
+
+```
+
+
+As shown from the plot above most of the Loans are taken by people who are employed.
+
+## Analysing the Loan Status
+```{r fig.width=15}
+
+ggplot(aes(LoanStatus), data = lp)+
+  geom_bar(bins = 30)
+
+```
+From the above plot we can see that most of the loans are current and completed followed by ChargedOff loans. This draws us towards the loans that have gone bad.
+
 
 ## Analysing the bad loans
 
@@ -259,7 +296,8 @@ From the above plot we can see that Debt consolidation(1) as expected has the hi
 
 ```{r}
 ggplot(aes(x = CreditScoreRangeLower , y = BorrowerRate), data = lp)+
-  geom_point(alpha = 1/50, position = 'jitter')
+  geom_point(alpha = 1/50, position = 'jitter')+
+  xlim(500,850)
 
 cor.test(CreditScoreRangeLower, BorrowerRate)
 ```
@@ -276,7 +314,8 @@ ggplot(aes(x=StatedMonthlyIncome,
        data = lp)+
   geom_point( alpha = 1/5 , position = 'jitter')+
   xlim(0,20000)+
-  ylim(0,2)
+  ylim(0,2)+
+  stat_ellipse()
 
 ```
 
@@ -409,6 +448,7 @@ ggplot(aes(x = StatedMonthlyIncome ,
   geom_point( alpha = 1/5 , position = 'jitter')+
   xlim(0,20000)+
   ylim(0,1)+
+  stat_ellipse()+
   xlab("Monthly Income ($)")+
   ylab("Debt-To-Income Ratio")+
   ggtitle("Monthly Income to Debt-to-Income Ration and Loan Category")
