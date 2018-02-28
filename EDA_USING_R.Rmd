@@ -473,6 +473,7 @@ ggplot(aes(y = as.numeric(YEAR), x = BadLoan, color = BadLoan), data = lp)+
   ylab("Year of Loan origination")+
   ggtitle("Bad Loan exposure")
 
+
 ```
 
 It appears the majority of bad loans are clustered in 2008 and 2011-2012 for the borrowers with income ranges $25k-50k and $50-75k. This leads us to beleive that recession would have impacted the Loan and would have increased delinquency.
