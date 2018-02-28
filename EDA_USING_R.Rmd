@@ -2,7 +2,10 @@
 title: "EDA_USING_R_LOAN_DATA"
 author: "Deepak Singh"
 date: "February 22, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
 ---
 
 ```{r setup, include=FALSE}
